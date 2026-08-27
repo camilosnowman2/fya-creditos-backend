@@ -1,9 +1,10 @@
+using FyaCreditos.Api.Data;
 using FyaCreditos.Api.Dtos;
-using FyaCreditos.Api.Options;
+using FyaCreditos.Api.Models;
 using FyaCreditos.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 
 namespace FyaCreditos.Api.Controllers;
 
@@ -12,34 +13,56 @@ namespace FyaCreditos.Api.Controllers;
 [EnableRateLimiting("auth")]
 public class AuthController : ControllerBase
 {
-    private readonly AuthCredentialsOptions _authOptions;
+    private readonly AppDbContext _db;
     private readonly IJwtTokenService _jwtTokenService;
 
-    public AuthController(IOptions<AuthCredentialsOptions> authOptions, IJwtTokenService jwtTokenService)
+    public AuthController(AppDbContext db, IJwtTokenService jwtTokenService)
     {
-        _authOptions = authOptions.Value;
+        _db = db;
         _jwtTokenService = jwtTokenService;
     }
 
-    /// <summary>
-    /// Login simple de un único usuario administrador (configurado por
-    /// variables de entorno) que devuelve un JWT para poder registrar
-    /// créditos. Ver README.md para configurar el usuario/clave.
-    /// </summary>
-    [HttpPost("login")]
-    public ActionResult<LoginResponseDto> Login([FromBody] LoginRequestDto dto)
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] LoginRequestDto dto)
     {
         if (!ModelState.IsValid)
         {
             return ValidationProblem(ModelState);
         }
 
-        var credencialesValidas =
-            !string.IsNullOrEmpty(_authOptions.PasswordHash) &&
-            string.Equals(dto.Username, _authOptions.Username, StringComparison.Ordinal) &&
-            SafeVerify(dto.Password, _authOptions.PasswordHash);
+        var existe = await _db.Usuarios.AnyAsync(u => u.Username == dto.Username);
+        if (existe)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "El usuario ya existe",
+                Status = StatusCodes.Status409Conflict
+            });
+        }
 
-        if (!credencialesValidas)
+        var usuario = new Usuario
+        {
+            Username = dto.Username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password, 11)
+        };
+
+        _db.Usuarios.Add(usuario);
+        await _db.SaveChangesAsync();
+
+        var (token, expiresAtUtc) = _jwtTokenService.GenerateToken(dto.Username);
+        return Ok(new LoginResponseDto { Token = token, ExpiresAtUtc = expiresAtUtc });
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.Username == dto.Username);
+        if (usuario == null || !SafeVerify(dto.Password, usuario.PasswordHash))
         {
             return Unauthorized(new ProblemDetails
             {
@@ -58,9 +81,8 @@ public class AuthController : ControllerBase
         {
             return BCrypt.Net.BCrypt.Verify(password, hash);
         }
-        catch (BCrypt.Net.SaltParseException)
+        catch
         {
-            // AuthCredentials:PasswordHash mal configurado (no es un hash BCrypt válido).
             return false;
         }
     }

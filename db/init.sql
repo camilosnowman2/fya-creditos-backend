@@ -34,3 +34,10 @@ CREATE TABLE IF NOT EXISTS notificaciones_correo (
 );
 
 CREATE INDEX IF NOT EXISTS idx_notif_estado ON notificaciones_correo (estado);
+
+CREATE TABLE IF NOT EXISTS usuarios (
+    id            SERIAL PRIMARY KEY,
+    username      VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(200) NOT NULL,
+    creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+);

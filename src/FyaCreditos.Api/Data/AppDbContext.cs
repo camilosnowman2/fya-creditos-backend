@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Credito> Creditos => Set<Credito>();
     public DbSet<NotificacionCorreo> NotificacionesCorreo => Set<NotificacionCorreo>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +40,17 @@ public class AppDbContext : DbContext
             entity.HasIndex(c => c.NombreComercial).HasDatabaseName("idx_creditos_nombre_comercial");
             entity.HasIndex(c => c.FechaRegistro).HasDatabaseName("idx_creditos_fecha_registro");
             entity.HasIndex(c => c.ValorCredito).HasDatabaseName("idx_creditos_valor_credito");
+        });
+
+        modelBuilder.Entity<Usuario>(entity =>
+        {
+            entity.ToTable("usuarios");
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Id).HasColumnName("id").UseIdentityAlwaysColumn();
+            entity.Property(u => u.Username).HasColumnName("username").HasMaxLength(100).IsRequired();
+            entity.Property(u => u.PasswordHash).HasColumnName("password_hash").HasMaxLength(200).IsRequired();
+            entity.Property(u => u.CreadoEn).HasColumnName("creado_en");
+            entity.HasIndex(u => u.Username).IsUnique();
         });
 
         modelBuilder.Entity<NotificacionCorreo>(entity =>
