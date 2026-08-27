@@ -1,0 +1,37 @@
+## .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+.vs/
+*.dll
+*.pdb
+
+## Entity Framework
+*.db
+*.db-shm
+*.db-wal
+
+## Environment / secrets (nunca comitear credenciales reales)
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+## Logs
+logs/
+*.log
+
+## OS
+.DS_Store
+Thumbs.db
+
+## IDE
+.idea/
+*.swp
+
+## Postgres data volume (docker compose)
+pgdata/

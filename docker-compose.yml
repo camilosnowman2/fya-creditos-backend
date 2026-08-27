@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fya_creditos
+      POSTGRES_USER: fya
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fya_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fya -d fya_creditos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=fya_creditos;Username=fya;Password=${POSTGRES_PASSWORD:-fya_dev_password}"
+      Smtp__Host: ${SMTP_HOST:-}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__User: ${SMTP_USER:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__FromAddress: ${SMTP_FROM_ADDRESS:-}
+      Smtp__NotificationRecipient: ${SMTP_NOTIFICATION_RECIPIENT:-fyasocialcapital@gmail.com}
+      Jwt__Secret: ${JWT_SECRET:?Debes definir JWT_SECRET en tu .env, minimo 32 caracteres}
+      AuthCredentials__Username: ${AUTH_USERNAME:-admin}
+      AuthCredentials__PasswordHash: ${AUTH_PASSWORD_HASH:?Debes definir AUTH_PASSWORD_HASH en tu .env (ver tools/generate_password_hash.py)}
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:8100}
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP
+    environment:
+      MP_MAX_MESSAGES: 50
+
+volumes:
+  pgdata:

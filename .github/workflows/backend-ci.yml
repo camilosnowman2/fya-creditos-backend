@@ -1,0 +1,71 @@
+name: Backend CI
+
+# Se ejecuta en los runners de GitHub (con acceso completo a NuGet), que es
+# donde este proyecto queda realmente compilado y probado por primera vez —
+# ver la nota sobre restricciones de red en README.md.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore src/FyaCreditos.Api/FyaCreditos.Api.csproj
+
+      - name: Build
+        run: dotnet build src/FyaCreditos.Api/FyaCreditos.Api.csproj --no-restore --configuration Release
+
+      - name: Restore tests
+        run: dotnet restore tests/FyaCreditos.Api.Tests/FyaCreditos.Api.Tests.csproj
+
+      - name: Run tests
+        run: dotnet test tests/FyaCreditos.Api.Tests/FyaCreditos.Api.Tests.csproj --no-restore --configuration Release --verbosity normal
+
+  db-scripts:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: fya_creditos
+          POSTGRES_USER: fya
+          POSTGRES_PASSWORD: fya_dev_password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fya -d fya_creditos"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Apply init.sql
+        run: PGPASSWORD=fya_dev_password psql -h localhost -U fya -d fya_creditos -f db/init.sql
+
+      - name: Apply seed.sql
+        run: PGPASSWORD=fya_dev_password psql -h localhost -U fya -d fya_creditos -f db/seed.sql
+
+      - name: Check 10 seed rows were inserted
+        run: |
+          COUNT=$(PGPASSWORD=fya_dev_password psql -h localhost -U fya -d fya_creditos -t -c "SELECT count(*) FROM creditos;" | tr -d '[:space:]')
+          echo "Filas insertadas: $COUNT"
+          test "$COUNT" = "10"

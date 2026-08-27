@@ -1,0 +1,30 @@
+{
+  "_comentario": "Copia este archivo como appsettings.Development.json (queda ignorado por git) para desarrollo local, o usa variables de entorno (recomendado). Nunca subas credenciales reales a un repositorio.",
+
+  "ConnectionStrings": {
+    "Default": "Host=localhost;Port=5432;Database=fya_creditos;Username=fya;Password=fya_dev_password"
+  },
+
+  "Smtp": {
+    "Host": "smtp.gmail.com",
+    "Port": 587,
+    "User": "tu-correo@gmail.com",
+    "Password": "tu-contraseña-de-aplicacion-de-16-caracteres",
+    "FromAddress": "tu-correo@gmail.com",
+    "FromName": "Fya Social Capital - Créditos",
+    "UseSsl": true,
+    "NotificationRecipient": "fyasocialcapital@gmail.com"
+  },
+
+  "Jwt": {
+    "Secret": "cambia-esto-por-una-clave-secreta-de-al-menos-32-caracteres",
+    "Issuer": "FyaCreditosApi",
+    "Audience": "FyaCreditosClient",
+    "ExpirationMinutes": 120
+  },
+
+  "AuthCredentials": {
+    "Username": "admin",
+    "PasswordHash": "$2a$11$REEMPLAZA_ESTO_CON_UN_HASH_BCRYPT_REAL"
+  }
+}
