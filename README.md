@@ -39,8 +39,7 @@ tools/generate_password_hash.py  Genera el hash BCrypt del usuario admin
 
 ```bash
 cp .env.example .env
-python3 tools/generate_password_hash.py   # pega el resultado en AUTH_PASSWORD_HASH del .env
-# genera también un JWT_SECRET propio (32+ caracteres aleatorios) en el .env
+# Edita el .env: genera un JWT_SECRET propio (32+ caracteres aleatorios)
 docker compose up --build
 ```
 
@@ -82,12 +81,20 @@ al repo).
 | `Smtp__Host` / `Port` / `User` / `Password` / `FromAddress` | Datos del SMTP que enviará el correo |
 | `Smtp__NotificationRecipient`     | Destinatario de la notificación (por defecto `fyasocialcapital@gmail.com`) |
 | `Jwt__Secret`                     | Clave simétrica para firmar los JWT (mínimo 32 caracteres)     |
-| `AuthCredentials__Username`       | Usuario admin para `/api/auth/login`                           |
-| `AuthCredentials__PasswordHash`   | Hash BCrypt de su contraseña (generar con `tools/generate_password_hash.py`) |
 | `Cors__AllowedOrigins__0..n`      | Orígenes permitidos para el frontend                            |
 
 **Nunca se comitean credenciales reales** — `.env`, `appsettings.Development.json`
 y `appsettings.Local.json` están en `.gitignore`.
+
+## Autenticación y Registro de Usuarios
+
+El sistema utiliza autenticación basada en JWT (JSON Web Tokens). La validación se realiza contra una tabla de usuarios almacenada en la base de datos PostgreSQL. 
+
+Para utilizar la API o acceder mediante el cliente web por primera vez, es necesario registrar un usuario inicial. Esto puede realizarse a través de:
+1. El endpoint `POST /api/auth/register`
+2. La opción "Registrarme" provista en la interfaz gráfica del frontend.
+
+No se requieren credenciales administrativas pre-configuradas ni scripts adicionales para generar contraseñas.
 
 ## Endpoints principales
 
@@ -117,7 +124,6 @@ Documentación interactiva completa en Swagger (`/swagger`). Resumen:
 - Validación de entrada con DataAnnotations en el DTO (frontend valida también, ver el repo del frontend).
 - Todas las consultas van parametrizadas vía EF Core (sin concatenar SQL), lo que previene inyección por diseño.
 - CORS restringido a los orígenes configurados.
-- Contraseña del admin guardada como hash BCrypt, nunca en texto plano.
 
 ## Pruebas
 
