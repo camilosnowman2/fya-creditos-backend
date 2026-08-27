@@ -29,7 +29,7 @@ db/
   init.sql         Esquema de la base de datos (tablas + índices)
   seed.sql         Los 10 créditos de ejemplo del anexo del examen
 tests/FyaCreditos.Api.Tests/   Pruebas unitarias de validación (xUnit)
-tools/generate_password_hash.py  Genera el hash BCrypt del usuario admin
+
 .github/workflows/backend-ci.yml Build + tests + verificación de db/*.sql en CI
 ```
 

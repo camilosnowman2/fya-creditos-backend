@@ -34,8 +34,7 @@ fya-creditos-backend/
 ├── db/
 │   ├── init.sql          # Script DDL — crea tablas e índices
 │   └── seed.sql          # Datos de ejemplo (10 créditos del anexo)
-├── tools/
-│   └── generate_password_hash.py   # Utilitario legacy (ver Nota de autenticación abajo)
+
 ├── .env.example          # Variables de entorno requeridas
 └── docker-compose.yml    # Levanta backend + PostgreSQL + Mailpit (dev)
 ```
