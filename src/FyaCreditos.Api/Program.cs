@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 // --- Configuración fuertemente tipada (appsettings.json + variables de entorno) ---
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-builder.Services.Configure<AuthCredentialsOptions>(builder.Configuration.GetSection("AuthCredentials"));
+
 
 // --- Base de datos ---
 var connectionString = builder.Configuration.GetConnectionString("Default")

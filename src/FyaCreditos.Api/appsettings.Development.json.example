@@ -21,10 +21,5 @@
     "Issuer": "FyaCreditosApi",
     "Audience": "FyaCreditosClient",
     "ExpirationMinutes": 120
-  },
-
-  "AuthCredentials": {
-    "Username": "admin",
-    "PasswordHash": "$2a$11$REEMPLAZA_ESTO_CON_UN_HASH_BCRYPT_REAL"
   }
 }
